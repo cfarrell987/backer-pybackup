@@ -1,7 +1,6 @@
 import getpass
 import os
 import glob
-# noinspection PyUnresolvedReferences
 import logging
 from pathlib import Path
 import tarfile
@@ -10,10 +9,9 @@ from datetime import date
 import time
 import configparser
 
-# DONE Logging
-# DONE json or cfg to define paths and variable switches such as logging.
-# DONE create function that uploads logs tar to CDN (Private folder)
 # TODO in soon-to-be-made config file, add option to change destination and share type i.e NFS, SMB, FTP etc.
+# TODO create a function to identify the share type, ensure it is active and ensure it can write to the share before
+#  attempting to run script
 
 
 # Define today
@@ -55,7 +53,9 @@ def logger():
         if os.path.exists(stagingPath + time.strftime("/%Y-%m-%d") + 'logs.log'):
             os.remove(stagingPath + time.strftime("/%Y-%m-%d") + 'logs.log')
         logging.basicConfig(format='%(asctime)s %(message)s', datefmt='\%m/%d/%Y %I:%M:%S %p', filename=stagingPath +
-                time.strftime("/%Y-%m-%d") + 'logs.log', level=logging.DEBUG)
+                                                                                                        time.strftime(
+                                                                                                            "/%Y-%m-%d") + 'logs.log',
+                            level=logging.DEBUG)
         print("Complete! ")
     else:
         logging.warning('Logging is Off.')
@@ -138,6 +138,6 @@ if __name__ == '__main__':
     cfgparse()
     logger()
     get_sys_logs()
-    # compress_logs()
+    compress_logs()
     upload_logs()
-    # clean_staging()
+    clean_staging()
