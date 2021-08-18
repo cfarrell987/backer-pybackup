@@ -48,11 +48,20 @@ def cfgparse():
 
 
 def logger():
+    curr_path = os.path.dirname(os.path.realpath(__file__))
+    loggingPath = str(curr_path) + '/logs'
+
     if logging_bool is True:
+        if bool(os.path.exists(loggingPath)) is not True:
+            try:
+                os.mkdir(loggingPath)
+                print("Logs Directory Created!")
+            except OSError:
+                print(f'Cannot create Logs directory at %s' % loggingPath )
         print("Initializing Logging...")
         if os.path.exists(stagingPath + time.strftime("/%Y-%m-%d") + 'logs.log'):
             os.remove(stagingPath + time.strftime("/%Y-%m-%d") + 'logs.log')
-        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='\%m/%d/%Y %I:%M:%S %p', filename=stagingPath +
+        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='\%m/%d/%Y %I:%M:%S %p', filename= loggingPath +
                                                                                                         time.strftime(
                                                                                                             "/%Y-%m-%d") + 'logs.log',
                             level=logging.DEBUG)
