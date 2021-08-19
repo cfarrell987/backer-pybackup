@@ -1,3 +1,4 @@
+
 import getpass
 import os
 import glob
@@ -12,6 +13,7 @@ import configparser
 # TODO in soon-to-be-made config file, add option to change destination and share type i.e NFS, SMB, FTP etc.
 # TODO create a function to identify the share type, ensure it is active and ensure it can write to the share before
 #  attempting to run script
+# TODO Add function to prompt user for share, user and pass
 
 
 # Define today
@@ -30,10 +32,14 @@ def cfgparse():
     global upload_dest
     # Gobbing all the sub directories together to collect them all in one place
     global p_sys_logs
-    # placeholder comment
+    #Toggle for logging
     global logging_bool
-    # placeholder comment
+    #Toggle for indexing logs
     global index_bool
+
+    #Define what type of share is being used
+    global share_type
+    
     config = configparser.ConfigParser()
     config.sections()
     config.read('init.INI')
@@ -45,8 +51,9 @@ def cfgparse():
     p_sys_logs = glob.glob(str(logsPath) + "/*", recursive=True)
     logging_bool = config.getboolean('OPTIONS', 'logging')
     index_bool = config.getboolean('OPTIONS', 'index')
+    share_type = config['OPTIONS']['share']
 
-
+    print(share_type)
 def logger():
     curr_path = os.path.dirname(os.path.realpath(__file__))
     loggingPath = str(curr_path) + '/logs'
