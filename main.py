@@ -1,6 +1,6 @@
-
 import getpass
 import os
+import subprocess
 import glob
 import logging
 from pathlib import Path
@@ -52,8 +52,9 @@ def cfgparse():
     logging_bool = config.getboolean('OPTIONS', 'logging')
     index_bool = config.getboolean('OPTIONS', 'index')
     share_type = config['OPTIONS']['share']
+    
 
-    print(share_type)
+    print(logging_bool)
 def logger():
     curr_path = os.path.dirname(os.path.realpath(__file__))
     loggingPath = str(curr_path) + '/logs'
@@ -117,18 +118,23 @@ def compress_logs():
 def upload_logs():
     if bool(os.path.exists(os.path.join(upload_dest))) is not True:
         print(os.path.join(upload_dest))
-        # subprocess.run("mount", "-t", "cifs", "-o", "credentials=/$HOME/creds/smb.creds", "//192.168.2.225/D",
-        # "/mnt/samba" )
+        logging.error("Share is Not Mounted! please mount share and try again!")
     else:
+        logging.info("Share Mounted!")
+    try:
         shutil.copyfile(stagingPath + compressed_logs_name,
                         upload_dest + os.path.join(compressed_logs_name))
         logging.info("Success! " + "logs backed up to: " + upload_dest)
-
+    except:
+        logging.error('Error: CANNOT COPY FILES!' )
+    else:
+        pass
 
 def clean_staging():
     logging.info("Cleaning all data from staging directory")
     try:
         os.remove(stagingPath + compressed_logs_name)
+        print(stagingPath)
         logging.info("tar ball deleted!")
     except OSError as e:
         logging.error("Error: %s - %s." % (e.filename, e.strerror))
