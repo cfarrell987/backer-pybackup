@@ -10,9 +10,11 @@ from datetime import date
 import time
 import configparser
 
-# TODO in soon-to-be-made config file, add option to change destination and share type i.e NFS, SMB, FTP etc.
-# TODO create a function to identify the share type, ensure it is active and ensure it can write to the share before
-#  attempting to run script
+# TODO in soon-to-be-made config file, add option to change destination and
+# share type i.e NFS, SMB, FTP etc.
+# TODO create a function to identify the share type, ensure it is active and
+# ensure it can write to the share before
+# attempting to run script
 # TODO Add function to prompt user for share, user and pass
 
 
@@ -26,7 +28,8 @@ compressed_logs_name = "/logs-backup" + today.strftime("%b-%d-%Y") + ".tar.gz"
 def cfgparse():
     # Define path to system logs
     global logsPath
-    # this directory is where the compressed System logs and python logs will be stored
+    # this directory is where the compressed System logs and python
+    # logs will be stored
     global stagingPath
     # Define the upload destination for the tar-ball
     global upload_dest
@@ -36,7 +39,7 @@ def cfgparse():
     global logging_bool
     #Toggle for indexing logs
     global index_bool
-    
+
     config = configparser.ConfigParser()
     config.sections()
     config.read('init.INI')
@@ -49,6 +52,7 @@ def cfgparse():
     logging_bool = config.getboolean('OPTIONS', 'logging')
     index_bool = config.getboolean('OPTIONS', 'index')
 
+
 def logger():
     curr_path = os.path.dirname(os.path.realpath(__file__))
     loggingPath = str(curr_path) + '/logs'
@@ -59,20 +63,21 @@ def logger():
                 os.mkdir(loggingPath)
                 print("Logs Directory Created!")
             except OSError:
-                print(f'Cannot create Logs directory at %s' % loggingPath )
+                print(f'Cannot create Logs directory at %s' % loggingPath)
         print("Initializing Logging...")
-        if os.path.exists(stagingPath + time.strftime("/%Y-%m-%d") + 'logs.log'):
+        if os.path.exists(stagingPath + time.strftime("/%Y-%m-%d") +
+                'logs.log'):
             os.remove(stagingPath + time.strftime("/%Y-%m-%d") + 'logs.log')
-        logging.basicConfig(format='%(asctime)s %(message)s', datefmt='\%m/%d/%Y %I:%M:%S %p', filename= loggingPath +
-                                                                                                        time.strftime(
-                                                                                                            "/%Y-%m-%d") + 'logs.log',
-                            level=logging.DEBUG)
+        logging.basicConfig(format='%(asctime)s %(message)s', 
+                datefmt='\%m/%d/%Y %I:%M:%S %p', filename=loggingPath 
+                + time.strftime("/%Y-%m-%d") + 'logs.log', level=logging.DEBUG)
+
         print("Complete! ")
     else:
         logging.warning('Logging is Off.')
 
 
-# This function gets the system logs paths and stores them in a dict to be used later on.
+# This function gets the system logs paths and stores them to be used later on.
 # It also creates the staging directory for the script in.
 def get_sys_logs():
     index_list_array = []
@@ -83,12 +88,14 @@ def get_sys_logs():
         try:
             os.mkdir(stagingPath)
         except OSError:
-            logging.error("Error: " "Creation of Directory %s failed" % stagingPath)
+            logging.error("Error: " "Creation of Directory %s failed" % 
+                stagingPath)
         else:
             logging.info("Created Temporary directory %s " % stagingPath)
     # Success print if the dir already exists
     else:
-        logging.info("Success! " + "Directory: " + "'" + stagingPath + "'" + " Exists!")
+        logging.info("Success! " + "Directory: " + "'" + stagingPath + "'" + 
+            "Exists!")
 
     if index_bool is not True:
         logging.warning("Index Logging is off!")
@@ -100,7 +107,7 @@ def get_sys_logs():
             index_file.writelines("%s\n" % line for line in index_list_array)
 
 
-# Packages and compresses the System Logs and stores the tar.gz in the staging folder
+# Packages and compresses System Logs, stores the tar.gz in the staging folder
 def compress_logs():
     tar = tarfile.open(stagingPath + compressed_logs_name, "w:gz")
     for item in p_sys_logs:
@@ -112,7 +119,7 @@ def compress_logs():
 def upload_logs():
     if bool(os.path.exists(os.path.join(upload_dest))) is not True:
         print(os.path.join(upload_dest))
-        logging.error("Share is Not Mounted! please mount share and try again!")
+        logging.error("Share is Not Mounted! Please mount share & try again!")
     else:
         logging.info("Share Mounted!")
     try:
@@ -120,9 +127,10 @@ def upload_logs():
                         upload_dest + os.path.join(compressed_logs_name))
         logging.info("Success! " + "logs backed up to: " + upload_dest)
     except:
-        logging.error('Error: CANNOT COPY FILES!' )
+        logging.error('Error: CANNOT COPY FILES!')
     else:
         pass
+
 
 def clean_staging():
     logging.info("Cleaning all data from staging directory")
