@@ -36,9 +36,6 @@ def cfgparse():
     global logging_bool
     #Toggle for indexing logs
     global index_bool
-
-    #Define what type of share is being used
-    global share_type
     
     config = configparser.ConfigParser()
     config.sections()
@@ -51,10 +48,7 @@ def cfgparse():
     p_sys_logs = glob.glob(str(logsPath) + "/*", recursive=True)
     logging_bool = config.getboolean('OPTIONS', 'logging')
     index_bool = config.getboolean('OPTIONS', 'index')
-    share_type = config['OPTIONS']['share']
-    
 
-    print(logging_bool)
 def logger():
     curr_path = os.path.dirname(os.path.realpath(__file__))
     loggingPath = str(curr_path) + '/logs'
