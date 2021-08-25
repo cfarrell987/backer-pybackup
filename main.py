@@ -57,15 +57,19 @@ def cfgparse():
 def initialize_logging():
     curr_path = os.path.dirname(os.path.realpath(__file__))
     logging_path = str(curr_path) + '/logs'
-
+    
     if logging_bool is True:
+        print("Initializing Logging...")
         if bool(os.path.exists(logging_path)) is not True:
             try:
                 os.mkdir(logging_path)
                 print("Logs Directory Created!")
             except OSError:
                 print(f'Cannot create Logs directory at %s' % logging_path)
-        print("Initializing Logging...")
+                logging_bool == False
+    else:
+        print("Logging is off!")
+    if logging_bool is True:
         if os.path.exists(staging_path + time.strftime("/%Y-%m-%d") +
                 'logs.log'):
             os.remove(staging_path + time.strftime("/%Y-%m-%d") + 'logs.log')
@@ -75,8 +79,7 @@ def initialize_logging():
 
         print("Complete! ")
     else:
-        logging.warning('Logging is Off.')
-
+        print("An error has occurred initializing logging and has been forced off.")
 
 # This function gets the system logs paths and stores them to be used later on.
 # It also creates the staging directory for the script in.
@@ -106,6 +109,7 @@ def get_sys_logs():
             index_list_array.append(item)
             index_file = open(staging_path + "/index.txt", "a")
             index_file.writelines("%s\n" % line for line in index_list_array)
+        index_file.close()
 
 
 # Packages and compresses System Logs, stores the tar.gz in the staging folder
@@ -141,9 +145,8 @@ def upload_logs():
 def clean_staging():
     logging.info("Cleaning all data from staging directory")
     try:
-       # os.remove(staging_path + compressed_logs_name)
-        print(staging_path)
-       # logging.info("tar ball deleted!")
+        os.remove(os.path.join(staging_path, compressed_logs_name))
+        logging.info("tar ball deleted!")
     except OSError as e:
         logging.error("Error: %s - %s." % (e.filename, e.strerror))
     else:
