@@ -81,13 +81,11 @@ def initialize_logging():
     else:
         print("An error has occurred initializing logging and has been forced off.")
 
-# This function gets the system logs paths and stores them to be used later on.
-# It also creates the staging directory for the script in.
-def get_sys_logs():
-    index_list_array = []
 
-    if bool(os.path.exists(staging_path)) is not True:
-
+def make_staging():
+    
+    if os.path.exists(staging_path) is not True:
+        logging.info("Creating Staging Path")
         # Try/Catch because Errors
         try:
             os.mkdir(staging_path)
@@ -101,15 +99,21 @@ def get_sys_logs():
         logging.info("Success! " + "Directory: " + "'" + staging_path + "'" + 
             "Exists!")
 
-    if index_bool is not True:
-        logging.warning("Index Logging is off!")
+# This function gets the system logs paths and stores them to be used later on.
+# It also creates the staging directory for the script in.
+def get_sys_logs():
+    index_list_array = []
+
+    if index_bool is True and os.path.exists(staging_path) is True:
     # Writes each directory to the index_list_array dict
-    else:
         for item in p_sys_logs:
             index_list_array.append(item)
             index_file = open(staging_path + "/index.txt", "a")
             index_file.writelines("%s\n" % line for line in index_list_array)
         index_file.close()
+    else:
+        logging.warning("Index Logging is off!")
+
 
 
 # Packages and compresses System Logs, stores the tar.gz in the staging folder
@@ -205,6 +209,7 @@ if __name__ == '__main__':
     get_home_path()
     cfgparse()
     initialize_logging()
+    make_staging()
     get_sys_logs()
     compress_logs()
     upload_logs()
