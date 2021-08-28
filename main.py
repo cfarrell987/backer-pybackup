@@ -15,15 +15,18 @@ import configparser
 # TODO implement feature to allow user to connect to share whilst script is running, (make it run in a subprocess!!)
 
 
-# Define today
 today = date.today()
 
 # Define the file name for the tar-ball of logs
 compressed_logs_name = "logs-backup" + today.strftime("%b-%d-%Y") + ".tar.gz"
 
 
+#initialize a config parser for the init file
+#rename file to config.json?
 def cfgparse():
 
+    config_file = 'init.INI'
+    
     config = configparser.ConfigParser()
     config.sections()
     config.read('init.INI')
@@ -46,15 +49,14 @@ def initialize_logging(log_bool, stg_path):
                 print("Logs Directory Created!")
             except OSError:
                 print(f'Cannot create Logs directory at %s' % logging_path)
-                #This will not work anymore as logging_bool is no longer mutable
-                logging_bool == False
+                
     else:
         print("Logging is off!")
-    if logging_bool is True:
-        if os.path.exists(os.path.join(staging_path, time.strftime("%Y-%m-%d") +
+    if os.path.exists(logging_path):
+        if os.path.exists(os.path.join(logging_path, time.strftime("%Y-%m-%d") +
                 '.log')):
-            print(os.path.join(staging_path, time.strftime("%Y-%m-%d") + ".log"))
-            os.remove(os.path.join(staging_path, time.strftime("%Y-%m-%d") + '.log'))
+            print(os.path.join(logging_path, time.strftime("%Y-%m-%d") + ".log"))
+            os.remove(os.path.join(logging_path, time.strftime("%Y-%m-%d") + '.log'))
             
         logging.basicConfig(format='%(asctime)s %(message)s', 
                 datefmt='/%m/%d/%Y %I:%M:%S %p', filename=os.path.join(logging_path, 
@@ -68,22 +70,22 @@ def initialize_logging(log_bool, stg_path):
 def make_staging(stg_path):
     staging_path = stg_path
     if os.path.exists(staging_path) is not True:
-        logging.info("Creating Staging Path")
         # Try/Catch because Errors
         try:
             os.mkdir(staging_path)
         except OSError:
-            logging.error("Error: " "Creation of Directory %s failed" % 
+            print("Error: " "Creation of Directory %s failed" % 
                 staging_path)
         else:
-            logging.info("Created Temporary directory %s " % staging_path)
+            print("Created Temporary directory %s " % staging_path)
     # Success print if the dir already exists
     else:
-        logging.info("Success! " + "Directory: " + "'" + staging_path + "'" + 
+        print("Success! " + "Directory: " + "'" + staging_path + "'" + 
             "Exists!")
 
-# This function gets the system logs paths and stores them to be used later on.
-# It also creates the staging directory for the script in.
+
+# Index system logfiles into a single index file
+# Maybe create a db and check if a logfile has been updated since the last upload?!
 def index_sys_logs(cfg, stg_path, p_logs):
     cfg = cfg
     index_bool = cfg.getboolean('OPTIONS', 'index')
@@ -159,7 +161,7 @@ def clean_staging(stg_path):
 
 #Gets the current logged in user
 #This is required as if the script is run with sudo
-#the ~ will be set to sudo
+#the ~ will be set to super user by default
 def get_logged_user():
 
     try:
@@ -204,8 +206,9 @@ if __name__ == '__main__':
 
         staging_path = str(get_home_path()) + config['PATHS']['staging_path']
 
-        initialize_logging(config.getboolean('OPTIONS', 'logging'), staging_path)
         make_staging(staging_path)
+        initialize_logging(config.getboolean('OPTIONS', 'logging'), staging_path)
+        
         
         sys_logs_path = config['PATHS']['logs_path']    
         p_sys_logs = glob.glob(str(config['PATHS']['logs_path']) + "/*", recursive=True)
