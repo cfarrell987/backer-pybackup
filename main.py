@@ -24,34 +24,19 @@ compressed_logs_name = "logs-backup" + today.strftime("%b-%d-%Y") + ".tar.gz"
 
 
 def cfgparse():
-    # Define path to system logs
-    global logs_path
-    # this directory is where the compressed System logs and python
-    # logs will be stored
-    global staging_path
-    # Define the upload destination for the tar-ball
-    global upload_dest
-    # Gobbing all the sub directories together to collect them all in one place
-    global p_sys_logs
-    #Toggle for logging
-    global logging_bool
-    #Toggle for indexing logs
-    global index_bool
 
     config = configparser.ConfigParser()
     config.sections()
     config.read('init.INI')
     config.sections()
-
-    logs_path = config['PATHS']['logs_path']
-    staging_path = str(get_home_path()) + config['PATHS']['staging_path']
-    upload_dest = config['PATHS']['upload_destination_path']
-    p_sys_logs = glob.glob(str(logs_path) + "/*", recursive=True)
-    logging_bool = config.getboolean('OPTIONS', 'logging')
-    index_bool = config.getboolean('OPTIONS', 'index')
+   
+    return config
 
 
-def initialize_logging():
+def initialize_logging(cfg, stg_path):
+    cfg = cfg
+    staging_path = stg_path
+    logging_bool = cfg.getboolean('OPTIONS', 'logging')
     curr_path = os.path.dirname(os.path.realpath(__file__))
     logging_path = os.path.join(str(curr_path), 'logs')
     
@@ -63,6 +48,7 @@ def initialize_logging():
                 print("Logs Directory Created!")
             except OSError:
                 print(f'Cannot create Logs directory at %s' % logging_path)
+                #This will not work anymore as logging_bool is no longer mutable
                 logging_bool == False
     else:
         print("Logging is off!")
@@ -81,8 +67,8 @@ def initialize_logging():
         print("An error has occurred initializing logging and has been forced off.")
 
 
-def make_staging():
-    
+def make_staging(stg_path):
+    staging_path = stg_path
     if os.path.exists(staging_path) is not True:
         logging.info("Creating Staging Path")
         # Try/Catch because Errors
@@ -97,10 +83,15 @@ def make_staging():
     else:
         logging.info("Success! " + "Directory: " + "'" + staging_path + "'" + 
             "Exists!")
+    return staging_path
 
 # This function gets the system logs paths and stores them to be used later on.
 # It also creates the staging directory for the script in.
-def index_sys_logs():
+def index_sys_logs(cfg, stg_path, p_logs):
+    cfg = cfg
+    index_bool = cfg.getboolean('OPTIONS', 'index')
+    staging_path = stg_path
+    p_sys_logs = p_logs
     index_list_array = []
 
     if index_bool is True and os.path.exists(staging_path) is True:
@@ -116,7 +107,10 @@ def index_sys_logs():
 
 
 # Packages and compresses System Logs, stores the tar.gz in the staging folder
-def compress_logs():
+def compress_logs(stg_path, p_logs):
+    staging_path = stg_path
+    p_sys_logs = p_logs
+
     try:
         print(os.path.join(staging_path, compressed_logs_name))
         tar = tarfile.open(os.path.join(staging_path, compressed_logs_name), "w:gz")
@@ -129,7 +123,8 @@ def compress_logs():
         tar.close()
 
 
-def upload_logs():
+def upload_logs(upld_path):
+    upload_dest = upld_path
     if bool(os.path.exists(os.path.join(upload_dest))) is not True:
         print(os.path.join(upload_dest))
         logging.error("Share is Not Mounted! Please mount share & try again!")
@@ -145,7 +140,8 @@ def upload_logs():
         pass
 
 
-def clean_staging():
+def clean_staging(stg_path):
+    staging_path = stg_path
     logging.info("Cleaning all data from staging directory")
     try:
         os.remove(os.path.join(staging_path, compressed_logs_name))
@@ -187,7 +183,7 @@ def get_logged_user():
 
         try:
             pkexec_uid = int(os.environ['PKEXEC_UID'])
-            return owd.getpwuid(pkexec_uid).pw_name
+            return pwd.getpwuid(pkexec_uid).pw_name
         except KeyError:
             pass
     return user
@@ -203,13 +199,23 @@ def get_home_path():
 
 # Main Method
 if __name__ == '__main__':
+    try:
+        get_logged_user()
+        get_home_path()
+        
+        config = cfgparse()
 
-    get_logged_user()
-    get_home_path()
-    cfgparse()
-    initialize_logging()
-    make_staging()
-    index_sys_logs()
-    compress_logs()
-    upload_logs()
-    clean_staging()
+        staging_path = str(get_home_path()) + config['PATHS']['staging_path']
+
+        initialize_logging(config, staging_path)
+        make_staging(staging_path)
+        
+        sys_logs_path = config['PATHS']['logs_path']    
+        p_sys_logs = glob.glob(str(config['PATHS']['logs_path']) + "/*", recursive=True)
+            
+        index_sys_logs(config, staging_path, p_sys_logs)
+        compress_logs(staging_path, p_sys_logs)
+        upload_logs(config['PATHS']['upload_destination_path'])
+
+    finally:
+        clean_staging(staging_path)
