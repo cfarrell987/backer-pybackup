@@ -11,12 +11,9 @@ from datetime import date
 import time
 import configparser
 
-# TODO in soon-to-be-made config file, add option to change destination and
-# share type i.e NFS, SMB, FTP etc.
-# TODO create a function to identify the share type, ensure it is active and
-# ensure it can write to the share before
-# attempting to run script
-# TODO Add function to prompt user for share, user and pass
+# TODO get rid of those awful global mutables and just return them, or maybe come up with a better way to parse our config file
+# TODO change logging init to check for logs path instead of the bool
+# TODO implement feature to allow user to connect to share whilst script is running, (make it run in a subprocess!!)
 
 
 # Define today
@@ -56,7 +53,7 @@ def cfgparse():
 
 def initialize_logging():
     curr_path = os.path.dirname(os.path.realpath(__file__))
-    logging_path = str(curr_path) + '/logs'
+    logging_path = os.path.join(str(curr_path), 'logs')
     
     if logging_bool is True:
         print("Initializing Logging...")
@@ -70,14 +67,16 @@ def initialize_logging():
     else:
         print("Logging is off!")
     if logging_bool is True:
-        if os.path.exists(staging_path + time.strftime("/%Y-%m-%d") +
-                'logs.log'):
-            os.remove(staging_path + time.strftime("/%Y-%m-%d") + 'logs.log')
+        if os.path.exists(os.path.join(staging_path, time.strftime("%Y-%m-%d") +
+                '.log')):
+            print(os.path.join(staging_path, time.strftime("%Y-%m-%d") + ".log"))
+            os.remove(os.path.join(staging_path, time.strftime("%Y-%m-%d") + '.log'))
+            
         logging.basicConfig(format='%(asctime)s %(message)s', 
-                datefmt='\%m/%d/%Y %I:%M:%S %p', filename=logging_path 
-                + time.strftime("/%Y-%m-%d") + 'logs.log', level=logging.DEBUG)
+                datefmt='/%m/%d/%Y %I:%M:%S %p', filename=os.path.join(logging_path, 
+                 time.strftime("%Y-%m-%d") + '.log'), level=logging.DEBUG)
 
-        print("Complete! ")
+        print("Complete!")
     else:
         print("An error has occurred initializing logging and has been forced off.")
 
@@ -101,14 +100,14 @@ def make_staging():
 
 # This function gets the system logs paths and stores them to be used later on.
 # It also creates the staging directory for the script in.
-def get_sys_logs():
+def index_sys_logs():
     index_list_array = []
 
     if index_bool is True and os.path.exists(staging_path) is True:
     # Writes each directory to the index_list_array dict
         for item in p_sys_logs:
             index_list_array.append(item)
-            index_file = open(staging_path + "/index.txt", "a")
+            index_file = open(os.path.join(staging_path, "index.txt"), "a")
             index_file.writelines("%s\n" % line for line in index_list_array)
         index_file.close()
     else:
@@ -156,7 +155,7 @@ def clean_staging():
     else:
         pass
     try:
-        os.remove(staging_path + "/index.txt")
+        os.remove(os.path.join(staging_path, "index.txt"))
         logging.info("index deleted!")
     except OSError as e:
         logging.error("Error: %s - %s." % (e.filename, e.strerror))
@@ -210,7 +209,7 @@ if __name__ == '__main__':
     cfgparse()
     initialize_logging()
     make_staging()
-    get_sys_logs()
+    index_sys_logs()
     compress_logs()
     upload_logs()
     clean_staging()
