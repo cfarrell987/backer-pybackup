@@ -81,6 +81,7 @@ def make_staging(stg_path):
     else:
         logging.info("Success! " + "Directory: " + "'" + staging_path + "'" + 
             "Exists!")
+    return staging_path
 
 # This function gets the system logs paths and stores them to be used later on.
 # It also creates the staging directory for the script in.
