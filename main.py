@@ -11,7 +11,6 @@ from datetime import date
 import time
 import configparser
 
-# TODO get rid of those awful global mutables and just return them, or maybe come up with a better way to parse our config file
 # TODO change logging init to check for logs path instead of the bool
 # TODO implement feature to allow user to connect to share whilst script is running, (make it run in a subprocess!!)
 
@@ -33,10 +32,9 @@ def cfgparse():
     return config
 
 
-def initialize_logging(cfg, stg_path):
-    cfg = cfg
+def initialize_logging(log_bool, stg_path):
     staging_path = stg_path
-    logging_bool = cfg.getboolean('OPTIONS', 'logging')
+    logging_bool = log_bool
     curr_path = os.path.dirname(os.path.realpath(__file__))
     logging_path = os.path.join(str(curr_path), 'logs')
     
@@ -206,7 +204,7 @@ if __name__ == '__main__':
 
         staging_path = str(get_home_path()) + config['PATHS']['staging_path']
 
-        initialize_logging(config, staging_path)
+        initialize_logging(config.getboolean('OPTIONS', 'logging'), staging_path)
         make_staging(staging_path)
         
         sys_logs_path = config['PATHS']['logs_path']    
