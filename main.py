@@ -14,7 +14,6 @@ import configparser
 # TODO change logging init to check for logs path instead of the bool
 # TODO implement feature to allow user to connect to share whilst script is running, (make it run in a subprocess!!)
 
-
 today = date.today()
 
 # Define the file name for the tar-ball of logs
@@ -26,12 +25,12 @@ compressed_logs_name = "logs-backup" + today.strftime("%b-%d-%Y") + ".tar.gz"
 def cfgparse():
 
     config_file = 'init.INI'
-    
+
     config = configparser.ConfigParser()
     config.sections()
     config.read('init.INI')
     config.sections()
-   
+
     return config
 
 
@@ -40,7 +39,7 @@ def initialize_logging(log_bool, stg_path):
     logging_bool = log_bool
     curr_path = os.path.dirname(os.path.realpath(__file__))
     logging_path = os.path.join(str(curr_path), 'logs')
-    
+
     if logging_bool is True:
         print("Initializing Logging...")
         if bool(os.path.exists(logging_path)) is not True:
@@ -49,22 +48,32 @@ def initialize_logging(log_bool, stg_path):
                 print("Logs Directory Created!")
             except OSError:
                 print(f'Cannot create Logs directory at %s' % logging_path)
-                
+
     else:
         print("Logging is off!")
     if os.path.exists(logging_path):
-        if os.path.exists(os.path.join(logging_path, time.strftime("%Y-%m-%d") +
-                '.log')):
-            print(os.path.join(logging_path, time.strftime("%Y-%m-%d") + ".log"))
-            os.remove(os.path.join(logging_path, time.strftime("%Y-%m-%d") + '.log'))
-            
-        logging.basicConfig(format='%(asctime)s %(message)s', 
-                datefmt='/%m/%d/%Y %I:%M:%S %p', filename=os.path.join(logging_path, 
-                 time.strftime("%Y-%m-%d") + '.log'), level=logging.DEBUG)
+        if os.path.exists(
+                os.path.join(logging_path,
+                             time.strftime("%Y-%m-%d") + '.log')):
+            print(
+                os.path.join(logging_path,
+                             time.strftime("%Y-%m-%d") + ".log"))
+            os.remove(
+                os.path.join(logging_path,
+                             time.strftime("%Y-%m-%d") + '.log'))
+
+        logging.basicConfig(format='%(asctime)s %(message)s',
+                            datefmt='/%m/%d/%Y %I:%M:%S %p',
+                            filename=os.path.join(
+                                logging_path,
+                                time.strftime("%Y-%m-%d") + '.log'),
+                            level=logging.DEBUG)
 
         print("Complete!")
     else:
-        print("An error has occurred initializing logging and has been forced off.")
+        print(
+            "An error has occurred initializing logging and has been forced off."
+        )
 
 
 def make_staging(stg_path):
@@ -74,14 +83,13 @@ def make_staging(stg_path):
         try:
             os.mkdir(staging_path)
         except OSError:
-            print("Error: " "Creation of Directory %s failed" % 
-                staging_path)
+            print("Error: " "Creation of Directory %s failed" % staging_path)
         else:
             print("Created Temporary directory %s " % staging_path)
     # Success print if the dir already exists
     else:
-        print("Success! " + "Directory: " + "'" + staging_path + "'" + 
-            "Exists!")
+        print("Success! " + "Directory: " + "'" + staging_path + "'" +
+              "Exists!")
     return staging_path
 
 
@@ -95,7 +103,7 @@ def index_sys_logs(cfg, stg_path, p_logs):
     index_list_array = []
 
     if index_bool is True and os.path.exists(staging_path) is True:
-    # Writes each directory to the index_list_array dict
+        # Writes each directory to the index_list_array dict
         for item in p_sys_logs:
             index_list_array.append(item)
             index_file = open(os.path.join(staging_path, "index.txt"), "a")
@@ -105,7 +113,6 @@ def index_sys_logs(cfg, stg_path, p_logs):
         logging.warning("Index Logging is off!")
 
 
-
 # Packages and compresses System Logs, stores the tar.gz in the staging folder
 def compress_logs(stg_path, p_logs):
     staging_path = stg_path
@@ -113,7 +120,8 @@ def compress_logs(stg_path, p_logs):
 
     try:
         print(os.path.join(staging_path, compressed_logs_name))
-        tar = tarfile.open(os.path.join(staging_path, compressed_logs_name), "w:gz")
+        tar = tarfile.open(os.path.join(staging_path, compressed_logs_name),
+                           "w:gz")
     except:
         logging.error("ERROR: failed to open tarfile!")
     finally:
@@ -159,7 +167,6 @@ def clean_staging(stg_path):
         pass
 
 
-
 #Gets the current logged in user
 #This is required as if the script is run with sudo
 #the ~ will be set to super user by default
@@ -188,10 +195,11 @@ def get_logged_user():
             pass
     return user
 
-#Sets home_dir to whatever the logged in users home path is
-#Needs to be done this way in case a user decides to 
-#change their ~ to anything other than /home/$USER
-#should also allow portability with MacOS
+
+# Sets home_dir to whatever the logged in users home path is
+# Needs to be done this way in case a user decides to
+# change their ~ to anything other than /home/$USER
+# should also allow portability with MacOS
 def get_home_path():
     home_dir = pwd.getpwnam(get_logged_user()).pw_dir
     return home_dir
@@ -202,18 +210,18 @@ if __name__ == '__main__':
     try:
         get_logged_user()
         get_home_path()
-        
+
         config = cfgparse()
 
         staging_path = str(get_home_path()) + config['PATHS']['staging_path']
 
         make_staging(staging_path)
-        initialize_logging(config.getboolean('OPTIONS', 'logging'), staging_path)
-        
-        
-        sys_logs_path = config['PATHS']['logs_path']    
-        p_sys_logs = glob.glob(str(config['PATHS']['logs_path']) + "/*", recursive=True)
-            
+        initialize_logging(config.getboolean('OPTIONS', 'logging'),
+                           staging_path)
+
+        sys_logs_path = config['PATHS']['logs_path']
+        p_sys_logs = glob.glob(str(config['PATHS']['logs_path']) + "/*",
+                               recursive=True)
         index_sys_logs(config, staging_path, p_sys_logs)
         compress_logs(staging_path, p_sys_logs)
         upload_logs(config['PATHS']['upload_destination_path'])
