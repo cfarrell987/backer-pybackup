@@ -82,6 +82,7 @@ def make_staging(stg_path):
     else:
         print("Success! " + "Directory: " + "'" + staging_path + "'" + 
             "Exists!")
+    return staging_path
 
 
 # Index system logfiles into a single index file
